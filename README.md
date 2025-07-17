@@ -46,6 +46,16 @@ The build process is defined in the `Containerfile` and consists of multiple sta
 4.  **UKI:** `efi-mkuki` is used to create a Unified Kernel Image (`os.efi`). This single file contains the kernel, initramfs, and kernel command line.
 5.  **VM:** The final stage creates a QEMU-based virtual machine to run the `os.efi` image.
 
+## Installation/Update
+
+To install or update the OS on a running system, you can use the `install.sh` script. This script will download the latest release from GitHub and install it.
+
+**Note:** You need to change the `GITHUB_REPO` variable in the `install.sh` script to your repository.
+
+```bash
+./install.sh
+```
+
 ## Customization
 
 You can customize the build by modifying the files in the `rootfs` directory. For example, you can:
