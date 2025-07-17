@@ -1,58 +1,56 @@
-FROM scratch AS ctx
-COPY / /
+#######################################################################
+# ---------- STAGE 1: Builder (Alpine base, Kernel, mkinitfs) ---------
+#######################################################################
+FROM alpine:3.22 AS builder
+
+RUN apk add --no-cache \
+      alpine-sdk \
+      linux-lts linux-firmware-none \
+      mkinitfs \
+      efi-mkuki \
+      alpine-make-rootfs \
+      squashfs-tools
+
+WORKDIR /build
+
+#######################################################################
+# ---------- STAGE 2: RootFS ------------------------------------------
+#######################################################################
+RUN alpine-make-rootfs \
+      --branch v3.22 \
+      --packages "alpine-base" \
+      rootfs
+
+RUN tar -C rootfs -czf rootfs.tar.gz .
+
+#######################################################################
+# ---------- STAGE 3: initramfs ---------------------------------------
+#######################################################################
 
 
-FROM docker.io/library/alpine:edge as builder
+COPY init.sh /build/init
+RUN chmod +x /build/init && \
+    echo 'kernel/drivers/block/zram' > /etc/mkinitfs/features.d/zram.modules \
+    echo '/sbin/fsck.vfat' > /etc/mkinitfs/features.d/vfat.files \
+    echo 'kernel/fs/vfat' > /etc/mkinitfs/features.d/vfat.modules 
 
-ARG TARGETARCH
+RUN mkinitfs -F "base ata usb zram ext4 vfat virtio" -i /build/init -o /build/initfs $(ls /lib/modules)
 
+#######################################################################
+# ---------- STAGE 4: UKI ---------------------------------------------
+#######################################################################
+RUN efi-mkuki \
+      -k $(ls /lib/modules) \
+      -c 'quiet console=ttyS0,115200 kexec_load_disabled=0'  \
+      -o  /build/os.efi \
+      /boot/vmlinuz-lts \
+      /build/initfs
 
-RUN apk add --no-cache systemd-efistub ukify binutils efi-mkuki ovmf alpine-make-rootfs zstd mkinitfs neovim qemu-img
+#######################################################################
+# ---------- STAGE 5: Export ------------------------------------------
+#######################################################################
+FROM scratch AS output
+COPY --from=builder /build/ /
 
-RUN set -ex; \
-    case "$TARGETARCH" in \
-        "arm64") \
-            echo "Setting up for aarch64"; \
-            apk add --no-cache qemu-system-aarch64; \
-            ;; \
-        "amd64") \
-            echo "Setting up for x86_64"; \
-            apk add --no-cache qemu-system-x86_64; \
-            ;; \
-        *) \
-            echo "Unknown architecture: $TARGETARCH"; \
-            exit 1; \
-            ;; \
-    esac
+CMD ["/bin/true"]
 
-RUN mkdir -p /work
-
-RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
-    --mount=type=cache,dst=/var/cache \
-    --mount=type=cache,dst=/var/log \
-    --mount=type=tmpfs,dst=/tmp \
-    alpine-make-rootfs -s /ctx/rootfs \
-    	--packages 'alpine-conf alpine-base linux-stable linux-firmware-none util-linux btrfs-progs efibootmgr openssh openrc nftables doas zram-init chrony ifupdown-ng rng-tools kexec-tools' \
-	--fs-skel-chown root:root \
-	--branch edge \
-	/work/fs /ctx/setup.sh
-
-
-RUN cd /work/fs \
-        && mv boot/vmlinuz-stable /work/vmlinuz-stable \
-	&& rm -rf var boot home usr/share/man usr/share/doc \
-
-ADD https://github.com/christoph00.keys /work/fs/etc/ssh/authorized_keys/core
-
-RUN cd /work/fs && find . -path "./boot" -prune -o -print | cpio -o -H newc  >  /work/initramfs-stable
-
-# RUN efi-mkuki -c "${CMDLINE}" -k "6.15.4" -o /work/os.efi /work/vmlinuz-stable /work/initramfs-stable
-	# efi-mkuki -c "rdinit=/sbin/init ro console=ttyS0,115200 kexec_load_disabled=0" -o /work/os.efi /work/vmlinuz-stable /work/initramfs-stable
-RUN ukify build --output /work/os.efi --cmdline "rdinit=/sbin/init console=ttyS0,115200 kexec_load_disabled=0" --linux /work/vmlinuz-stable --initrd /work/initramfs-stable --os-release /work/fs/etc/os-release
-
-COPY entrypoint.sh /entrypoint.sh
-VOLUME /disk
-
-ENTRYPOINT ["/entrypoint.sh"]
-
-CMD ["vm"]
