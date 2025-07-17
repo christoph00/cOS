@@ -19,7 +19,7 @@ mount -t devpts -o gid=5,mode=0620,noexec,nosuid devpts /dev/pts
 
 : ${ZRAM_SIZE:=600M}
 : ${ROOT_FSTYPE:=ext4}
-: ${ROOT_DEV:=/dev/disk/by-label/osdisk}
+: ${ROOT_DEV:=/dev/disk/by-label/ESP}
 : ${ROOT_ARCHIVE:=rootfs.tar.gz}
 
 log "Load Kernel-Modules ..."
@@ -52,9 +52,6 @@ ELAPSED=0
 /bin/mdev -s
 sleep 0.5
 
-ls -lah /dev
-
-
 mem_total_kb=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
 zram_size_kb=$((mem_total_kb * 8 / 10))
 log "Create ZRAM Root"
@@ -71,7 +68,6 @@ mount "$ROOT_DEV" /mnt/alpine_dev
 log "Found rootfs Archive, extract to zram root"
 tar xzf "/mnt/alpine_dev/${ROOT_ARCHIVE}" -C /mnt/zram_root
 log_suc "rootfs archive extraction successful"
-
 
 log "Switch Root"
 

@@ -61,7 +61,7 @@ COPY --from=builder /build/os.efi /work/
 COPY --from=builder /build/rootfs.tar.gz /work/
 COPY entrypoint.sh /entrypoint.sh
 
-RUN mkfs.ext4 -L osdisk -d /work /osdisk.raw 2G \
+RUN mkfs.ext4 -L ESP -d /work /osdisk.raw 2G \
     && qemu-img convert -f raw -O qcow2 -o cluster_size=2M,lazy_refcounts=on /osdisk.raw /osdisk.qcow2 && rm /osdisk.raw
 
 VOLUME /disk
