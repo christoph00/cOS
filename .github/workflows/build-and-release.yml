@@ -21,7 +21,7 @@ jobs:
           podman run --rm --entrypoint /bin/sh -v ./artifacts:/artifacts custom-alpine-os -c "cp /work/os.efi /artifacts/os.efi && cp /work/rootfs.tar.gz /artifacts/rootfs.tar.gz"
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: os-artifacts
           path: artifacts
