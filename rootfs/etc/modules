@@ -1,0 +1,9 @@
+wireguard
+ripv6
+af_packet
+ptp_kvm
+tun
+virtio
+virtio_pci
+virtio_blk
+

@@ -1,0 +1,4 @@
+/dev/vda2  /var  btrfs  auto,nofail,rw,relatime,discard=async,space_cache=v2,compress-force=zstd,subvol=@var  0 0
+/dev/vda2  /home  btrfs  auto,nofail,rw,relatime,discard=async,space_cache=v2,compress-force=zstd,subvol=@home 0 0
+tmpfs /tmp tmpfs nosuid,nodev,noatime 0 0
+tmpfs /var/tmp tmpfs nosuid,nodev,noatime 0 0

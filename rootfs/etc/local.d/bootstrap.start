@@ -1,0 +1,11 @@
+#!/bin/sh
+
+echo "Starting Bootstrap..."
+
+mkdir -p /var/lib/ssh
+
+if [ ! -f /var/lib/ssh/ssh_host_ed25519_key ]; then
+  echo "Generating SSH keys..."
+  ssh-keygen -q -N '' -t ed25519 -f /var/lib/ssh/ssh_host_ed25519_key
+  /etc/init.d/sshd restart
+fi

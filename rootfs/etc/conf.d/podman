@@ -1,0 +1,2 @@
+podman_opts="--time 0" 
+

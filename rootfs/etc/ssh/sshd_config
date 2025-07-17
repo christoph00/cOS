@@ -1,0 +1,12 @@
+KbdInteractiveAuthentication no
+PasswordAuthentication no
+PermitRootLogin no
+ClientAliveInterval 15
+Subsystem       sftp    /usr/lib/ssh/sftp-server
+HostKey /var/lib/ssh/ssh_host_ed25519_key
+HostKey /var/lib/ssh/ssh_host_rsa_key
+HostKey /var/lib/ssh/ssh_host_ecdsa_key
+
+AuthorizedKeysFile /etc/ssh/authorized_keys/%u
+
+Port 2023
