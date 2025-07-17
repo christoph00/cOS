@@ -23,7 +23,7 @@ start_vm() {
         -kernel /work/os.efi \
         -device virtio-net,netdev=nic \
         -netdev user,hostname=os,id=nic \
-	-drive file=/disk/disk1.qcow2,format=qcow2,if=none,id=disk0 \
+	-drive file=/osdisk.qcow2,format=qcow2,if=none,id=disk0 \
         -device virtio-blk-pci,drive=disk0
 }
 

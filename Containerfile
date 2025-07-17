@@ -9,18 +9,22 @@ RUN apk add --no-cache \
       mkinitfs \
       efi-mkuki \
       alpine-make-rootfs \
+      e2fsprogs \
       squashfs-tools
 
 WORKDIR /build
+
+COPY rootfs /build/rootfs-overlay
 
 #######################################################################
 # ---------- STAGE 2: RootFS ------------------------------------------
 #######################################################################
 RUN alpine-make-rootfs \
       --branch v3.22 \
-      --packages "alpine-base" \
-      rootfs
-
+      --packages "alpine-base linux-lts linux-firmware-none openrc podman monit dropbear" \
+      -s rootfs-overlay \
+      rootfs 
+RUN rm -rf rootfs/{boot, var, home}
 RUN tar -C rootfs -czf rootfs.tar.gz .
 
 #######################################################################
@@ -29,10 +33,11 @@ RUN tar -C rootfs -czf rootfs.tar.gz .
 
 
 COPY init.sh /build/init
-RUN chmod +x /build/init && \
-    echo 'kernel/drivers/block/zram' > /etc/mkinitfs/features.d/zram.modules \
-    echo '/sbin/fsck.vfat' > /etc/mkinitfs/features.d/vfat.files \
-    echo 'kernel/fs/vfat' > /etc/mkinitfs/features.d/vfat.modules 
+RUN chmod +x /build/init \
+    && echo 'kernel/drivers/block/zram' > /etc/mkinitfs/features.d/zram.modules \
+    && echo '/sbin/fsck.vfat' > /etc/mkinitfs/features.d/vfat.files \
+    && echo 'kernel/fs/vfat' > /etc/mkinitfs/features.d/vfat.modules \
+    && echo '/sbin/mkfs.ext4' > /etc/mkinitfs/features.d/ext4.files 
 
 RUN mkinitfs -F "base ata usb zram ext4 vfat virtio" -i /build/init -o /build/initfs $(ls /lib/modules)
 
@@ -47,10 +52,19 @@ RUN efi-mkuki \
       /build/initfs
 
 #######################################################################
-# ---------- STAGE 5: Export ------------------------------------------
+# ---------- STAGE 5: Test ------------------------------------------
 #######################################################################
-FROM scratch AS output
-COPY --from=builder /build/ /
+FROM docker.io/library/alpine:3.22 as vm
+RUN apk add --no-cache ovmf neovim qemu-img qemu-system-x86_64 e2fsprogs
+COPY --from=builder /build/os.efi /work/
+COPY --from=builder /build/rootfs.tar.gz /work/
+COPY entrypoint.sh /entrypoint.sh
 
-CMD ["/bin/true"]
+RUN mkfs.ext4 -L osdisk -d /work /osdisk.raw 2G \
+    && qemu-img convert -f raw -O qcow2 -o cluster_size=2M,lazy_refcounts=on /osdisk.raw /osdisk.qcow2 && rm /osdisk.raw
 
+VOLUME /disk
+
+ENTRYPOINT ["/entrypoint.sh"]
+
+CMD ["vm"]
