@@ -3,7 +3,7 @@
 ::wait:/sbin/openrc default
 ::shutdown:/sbin/openrc shutdown
 
-console::respawn:/sbin/getty -L console 115200 vt100
+ttyS0::respawn:/sbin/getty -L ttyS0 115200 vt100
 
 ::ctrlaltdel:/sbin/reboot
 

@@ -8,7 +8,6 @@ log_err() { printf "✗ %s\n" "$*" >&2; }
 /bin/busybox --install -s /bin
 export PATH=/bin:/sbin:/usr/bin:/usr/sbin
 
-
 log "Mount Filesystems"
 mount -t sysfs -o noexec,nosuid,nodev sysfs /sys
 mount -t devtmpfs -o exec,nosuid,mode=0755,size=2M devtmpfs /dev 2>/dev/null \
@@ -17,7 +16,6 @@ mount -t proc -o noexec,nosuid,nodev proc /proc
 [ -c /dev/ptmx ] || mknod -m 666 /dev/ptmx c 5 2
 [ -d /dev/pts ] || mkdir -m 755 /dev/pts
 mount -t devpts -o gid=5,mode=0620,noexec,nosuid devpts /dev/pts
-
 
 : ${ZRAM_SIZE:=600M}
 : ${ROOT_FSTYPE:=ext4}
@@ -54,6 +52,8 @@ ELAPSED=0
 /bin/mdev -s
 sleep 0.5
 
+ls -lah /dev
+
 
 mem_total_kb=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
 zram_size_kb=$((mem_total_kb * 8 / 10))
@@ -74,6 +74,15 @@ log_suc "rootfs archive extraction successful"
 
 
 log "Switch Root"
-exec switch_root /mnt/zram_root /sbin/init
-log_err "Switch Root Failed"
+
+if [[ -x "/mnt/zram_root/sbin/init" ]] ; then
+    umount /sys /proc
+
+    /bin/mount --move /dev /mnt/zram_root/dev
+    exec 0</mnt/zram_root/dev/console
+    exec 1>/mnt/zram_root/dev/console
+    exec 2>/mnt/zram_root/dev/console
+    exec switch_root -c /dev/console /mnt/zram_root /sbin/init
+fi
+log_err "Missing /sbin/init in new root"
 exec sh

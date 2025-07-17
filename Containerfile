@@ -15,16 +15,17 @@ RUN apk add --no-cache \
 WORKDIR /build
 
 COPY rootfs /build/rootfs-overlay
+COPY setup.sh /build/setup.sh
 
 #######################################################################
 # ---------- STAGE 2: RootFS ------------------------------------------
 #######################################################################
 RUN alpine-make-rootfs \
       --branch v3.22 \
-      --packages "alpine-base linux-lts linux-firmware-none openrc podman monit dropbear" \
+      --packages "alpine-base linux-lts linux-firmware-none openrc podman monit dropbear tailscale" \
       -s rootfs-overlay \
-      rootfs 
-RUN rm -rf rootfs/{boot, var, home}
+      rootfs /build/setup.sh
+RUN rm -rf rootfs/boot && rm -rf rootfs/var
 RUN tar -C rootfs -czf rootfs.tar.gz .
 
 #######################################################################
