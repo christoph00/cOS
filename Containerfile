@@ -55,20 +55,24 @@ RUN efi-mkuki \
       /boot/vmlinuz-lts \
       /build/initfs
 
+FROM scratch 
+COPY --from=builder /build/rootfs.tar.gz /
+COPY --from=builder /build/os.efi /
+
 #######################################################################
 # ---------- STAGE 5: Test ------------------------------------------
 #######################################################################
-FROM docker.io/library/alpine:3.22 as vm
-RUN apk add --no-cache ovmf neovim qemu-img qemu-system-x86_64 e2fsprogs
-COPY --from=builder /build/os.efi /work/
-COPY --from=builder /build/rootfs.tar.gz /work/
-COPY entrypoint.sh /entrypoint.sh
-
-RUN mkfs.ext4 -L ESP -d /work /osdisk.raw 2G \
-    && qemu-img convert -f raw -O qcow2 -o cluster_size=2M,lazy_refcounts=on /osdisk.raw /osdisk.qcow2 && rm /osdisk.raw
-
-VOLUME /disk
-
-ENTRYPOINT ["/entrypoint.sh"]
-
-CMD ["vm"]
+# FROM docker.io/library/alpine:3.22 as vm
+# RUN apk add --no-cache ovmf neovim qemu-img qemu-system-x86_64 e2fsprogs
+# COPY --from=builder /build/os.efi /work/
+# COPY --from=builder /build/rootfs.tar.gz /work/
+# COPY entrypoint.sh /entrypoint.sh
+#
+# RUN mkfs.ext4 -L ESP -d /work /osdisk.raw 2G \
+#     && qemu-img convert -f raw -O qcow2 -o cluster_size=2M,lazy_refcounts=on /osdisk.raw /osdisk.qcow2 && rm /osdisk.raw
+#
+# VOLUME /disk
+#
+# ENTRYPOINT ["/entrypoint.sh"]
+#
+# CMD ["vm"]

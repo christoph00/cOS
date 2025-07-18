@@ -18,7 +18,7 @@ jobs:
       - name: Extract artifacts
         run: |
           mkdir -p artifacts
-          podman run --rm --entrypoint /bin/sh -v ./artifacts:/artifacts custom-alpine-os -c "cp /work/os.efi /artifacts/os.efi && cp /work/rootfs.tar.gz /artifacts/rootfs.tar.gz"
+          podman run --rm --entrypoint /bin/sh -v ./artifacts:/artifacts custom-alpine-os -c "cp /os.efi /artifacts/os.efi && cp /rootfs.tar.gz /artifacts/rootfs.tar.gz"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
