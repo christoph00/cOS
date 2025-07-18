@@ -23,8 +23,9 @@ mount -t devpts -o gid=5,mode=0620,noexec,nosuid devpts /dev/pts
 : ${ROOT_ARCHIVE:=rootfs.tar.gz}
 
 log "Load Kernel-Modules ..."
-for mod in virtio_pci virtio_blk virtio-scsi virtio_ring virtio_rng \
+for mod in virtio_pci virtio_blk virtio-scsi virtio_ring virtio_rng virtio_console \
            zram ext4 vfat \
+	   simpledrm \
            ata_piix ata_generic libata \
            sd_mod sr_mod uhci_hcd ehci_hcd usb_storage \
            floppy; do
