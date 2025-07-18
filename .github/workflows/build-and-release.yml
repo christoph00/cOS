@@ -18,9 +18,10 @@ jobs:
       - name: Extract artifacts
         run: |
           mkdir -p artifacts
-          podman create --name cos cos
+          podman create --name cos --entrypoint="" cos
           podman cp cos:os.efi artifacts/os.efi
           podman cp cos:rootfs.tar.gz artifacts/rootfs.tar.gz
+          podman rm cos
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
