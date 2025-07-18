@@ -9,6 +9,7 @@ RUN apk add --no-cache \
       mkinitfs \
       efi-mkuki \
       alpine-make-rootfs \
+      systemd-efistub \
       e2fsprogs \
       squashfs-tools
 
@@ -47,8 +48,10 @@ RUN mkinitfs -F "base ata usb zram ext4 vfat virtio" -i /build/init -o /build/in
 #######################################################################
 RUN efi-mkuki \
       -k $(ls /lib/modules) \
-      -c 'quiet console=ttyS0,115200 kexec_load_disabled=0'  \
+      -c 'console=tty0 console=ttyS0,115200 kexec_load_disabled=0'  \
       -o  /build/os.efi \
+      -r /etc/os-release \
+      -S /usr/lib/systemd/boot/efi/linuxx64.efi.stub \
       /boot/vmlinuz-lts \
       /build/initfs
 
