@@ -15,14 +15,14 @@ jobs:
       - name: Build the container
         uses: redhat-actions/buildah-build@v2
         with:
-          image: cos
+          image: cos-image
           containerfiles: |
             ./Containerfile
 
       - name: Extract artifacts
         run: |
           mkdir -p artifacts
-          podman run --rm -d --name cos cos
+        podman run --rm -d --name cos cos-image:latest
           podman cp cos:os.efi artifacts/os.efi
           podman cp cos:rootfs.tar.gz artifacts/rootfs.tar.gz
 
