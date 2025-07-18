@@ -18,7 +18,7 @@ jobs:
       - name: Extract artifacts
         run: |
           mkdir -p artifacts
-          podman create --name cos --entrypoint="" cos
+          podman create --name cos --entrypoint="" cos ""
           podman cp cos:os.efi artifacts/os.efi
           podman cp cos:rootfs.tar.gz artifacts/rootfs.tar.gz
           podman rm cos
