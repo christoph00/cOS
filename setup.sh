@@ -26,6 +26,7 @@ rc_add sysctl boot
 rc_add bootmisc boot
 rc_add syslog boot
 rc_add cgroups boot
+rc_add inittab boot
 
 rc_add mount-ro shutdown
 rc_add killprocs shutdown
