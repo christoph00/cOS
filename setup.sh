@@ -38,6 +38,7 @@ rc_add core-setup default
 rc_add tailscale default
 rc_add podman default
 rc_add monit default
+rc_add sshd default
 
 einfo "Set Root Password"
 sed -i 's|root.*|root:$1$n3vjdweX$vyZqcZyUC5Q2uq4bxnfbQ0:18242:0:99999:7:::|g' "$ROOTFS"/etc/shadow
