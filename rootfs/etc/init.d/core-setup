@@ -2,8 +2,7 @@
 
 depend() {
     need localmount
-    use network
-    after network
+    need networking
     before sshd
     before tailscale
     before monit
