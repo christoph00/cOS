@@ -25,6 +25,7 @@ start_pre() {
     eend 0
 
     ebegin "Downloading SSH keys for 'core'"
+    mkdir -p /etc/ssh/authorized_keys
     wget -qO /etc/ssh/authorized_keys/core \
          https://github.com/christoph00.keys \
         || { eend 1 "Failed to download SSH keys"; return 1; }
