@@ -1,0 +1,60 @@
+#!/sbin/openrc-run
+
+depend() {
+    need localmount
+    use network
+    before sshd
+    before tailscale
+    before monit
+}
+
+start_pre() {
+    ebegin "Verifying Btrfs mounts (/var, /home)"
+    for dir in /var /home; do
+        mountpoint -q "$dir" || { eend 1 "Mount point missing: $dir"; return 1; }
+        grep -qE " ${dir} .*btrfs " /proc/mounts \
+            || { eend 1 "Not a Btrfs filesystem: $dir"; return 1; }
+    done
+    eend 0
+
+    ebegin "Creating user 'core' and adding to wheel group"
+    if ! getent passwd core >/dev/null; then
+        adduser -h /home/core -G wheel -s /bin/ash -D core \
+          || { eend 1 "Failed to create user 'core'"; return 1; }
+    fi
+    eend 0
+
+    ebegin "Downloading SSH keys for 'core'"
+    wget -qO /etc/ssh/authorized_keys/core \
+         https://github.com/christoph00.keys \
+        || { eend 1 "Failed to download SSH keys"; return 1; }
+    chmod 600 /etc/ssh/authorized_keys/core
+    eend 0
+
+    ebegin "Checking/creating SSH host keys in /var/ssh"
+    install -d -m 700 /var/ssh
+    for t in rsa ed25519 ecdsa; do
+        key="/var/ssh/ssh_host_${t}_key"
+        pub="${key}.pub"
+        if [ ! -f "$key" ]; then
+            ssh-keygen -t "$t" -f "$key" -N "" \
+                || { eend 1 "Error generating $t host key"; return 1; }
+            chmod 600 "$key" "$pub"
+        fi
+    done
+    eend 0
+}
+
+start() {
+    ebegin "Reading and setting hostname from /var/config.json"
+    HOSTNAME=$(jq -r '.hostname' /var/config.json 2>/dev/null) \
+        || { eend 1 "Error reading hostname"; return 1; }
+    if [ -n "$HOSTNAME" ]; then
+        echo "$HOSTNAME" > /etc/hostname
+        hostname "$HOSTNAME"
+    fi
+    eend 0
+
+}
+
+
