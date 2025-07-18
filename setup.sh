@@ -32,12 +32,12 @@ rc_add mount-ro shutdown
 rc_add killprocs shutdown
 rc_add savecache shutdown
 
-# rc_add local default
-# rc_add sshd default
-# rc_add podman default
+rc_add local default
+rc_add sshd default
+rc_add podman default
 rc_add networking default
-# rc_add tailscale default
-# rc_add monit default
+rc_add tailscale default
+rc_add monit default
 
 
 einfo "Set Root Password"
