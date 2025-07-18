@@ -55,9 +55,11 @@ RUN efi-mkuki \
       /boot/vmlinuz-lts \
       /build/initfs
 
-FROM scratch 
+FROM busybox 
 COPY --from=builder /build/rootfs.tar.gz /
 COPY --from=builder /build/os.efi /
+
+CMD ["/bin/true"]
 
 #######################################################################
 # ---------- STAGE 5: Test ------------------------------------------
