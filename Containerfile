@@ -48,7 +48,7 @@ RUN mkinitfs -F "base ata usb zram ext4 vfat virtio" -i /build/init -o /build/in
 #######################################################################
 RUN efi-mkuki \
       -k $(ls /lib/modules) \
-      -c 'console=tty1 console=ttyS0,115200 kexec_load_disabled=0'  \
+      -c 'kexec_load_disabled=0'  \
       -o  /build/os.efi \
       -r /etc/os-release \
       -S /usr/lib/systemd/boot/efi/linuxx64.efi.stub \
