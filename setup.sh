@@ -26,7 +26,7 @@ rc_add sysctl boot
 rc_add bootmisc boot
 rc_add syslog boot
 rc_add cgroups boot
-rc_add inittab boot
+rc_add tty boot
 
 rc_add mount-ro shutdown
 rc_add killprocs shutdown
@@ -40,5 +40,5 @@ rc_add podman default
 rc_add monit default
 rc_add sshd default
 
-# einfo "Set Root Password"
-# sed -i 's|root.*|root:$1$n3vjdweX$vyZqcZyUC5Q2uq4bxnfbQ0:18242:0:99999:7:::|g' "$ROOTFS"/etc/shadow
+einfo "Set Root Password"
+sed -i 's|root.*|root:$1$n3vjdweX$vyZqcZyUC5Q2uq4bxnfbQ0:18242:0:99999:7:::|g' "$ROOTFS"/etc/shadow

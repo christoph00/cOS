@@ -18,51 +18,6 @@ mount -t proc -o noexec,nosuid,nodev proc /proc
 mount -t devpts -o gid=5,mode=0620,noexec,nosuid devpts /dev/pts
 
 
-# read the kernel options. we need surve things like:
-#  acpi_osi="!Windows 2006" xen-pciback.hide=(01:00.0)
-set -- $(cat /proc/cmdline)
-
-myopts="BOOTIF
-	autodetect_serial
-	blacklist
-	init
-	init_args
-	modules
-	quiet
-	splash
-"
-
-for opt; do
-	case "$opt" in
-	s|single|1)
-		SINGLEMODE=yes
-		continue
-		;;
-	console=*)
-		opt="${opt#*=}"
-		KOPT_consoles="${opt%%,*} $KOPT_consoles"
-		switch_root_opts="-c /dev/${opt%%,*}"
-		continue
-		;;
-	esac
-
-	for i in $myopts; do
-		case "$opt" in
-		$i=*)	eval "KOPT_${i}"='${opt#*=}';;
-		$i)	eval "KOPT_${i}=yes";;
-		no$i)	eval "KOPT_${i}=no";;
-		esac
-	done
-done
-
-case "$KOPT_autodetect_serial" in
-	setconsole) setconsole_serial;;
-	setconsole=*) setconsole_serial $(echo "${KOPT_autodetect_serial#setconsole=}" | tr ',' ' ');;
-esac
-
-
-: ${KOPT_init:=/sbin/init}
-
 : ${ZRAM_SIZE:=600M}
 : ${ROOT_FSTYPE:=ext4}
 : ${ROOT_DEV:=/dev/disk/by-label/ESP}
