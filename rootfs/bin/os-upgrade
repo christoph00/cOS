@@ -80,7 +80,7 @@ for F in $FILES; do
     info "Downloading $F..."
     if wget -O "/esp/$F" "$URL"; then
         info "✔ $F downloaded successfully"
-        SIZE=$(ls -lh "$F" | awk '{print $5}')
+        SIZE=$(ls -lh "/esp/$F" | awk '{print $5}')
         info "  Size: $SIZE"
     else
         error "✖ Download failed for $F"

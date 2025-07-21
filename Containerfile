@@ -23,7 +23,7 @@ COPY setup.sh /build/setup.sh
 #######################################################################
 RUN alpine-make-rootfs \
       --branch v3.22 \
-      --packages "alpine-base linux-lts linux-firmware-none openrc podman monit doas tailscale kexec-tools btrfs-progs openssh-server jq nftables iptables rng-tools htop logrotate irqbalance zram-init" \
+      --packages "alpine-base linux-lts linux-firmware-none openrc podman monit doas tailscale btrfs-progs openssh-server jq nftables iptables rng-tools htop logrotate irqbalance zram-init" \
       -s rootfs-overlay \
       rootfs /build/setup.sh
 RUN rm -rf rootfs/boot && rm -rf rootfs/var
@@ -48,7 +48,7 @@ RUN mkinitfs -F "base ata usb zram ext4 vfat virtio" -i /build/init -o /build/in
 #######################################################################
 RUN efi-mkuki \
       -k $(ls /lib/modules) \
-      -c 'kexec_load_disabled=0 crashkernel=384M@256M quiet'  \
+      -c 'quiet'  \
       -o  /build/os.efi \
       -r /etc/os-release \
       -S /usr/lib/systemd/boot/efi/linuxx64.efi.stub \
