@@ -13,7 +13,6 @@ mount -t sysfs -o noexec,nosuid,nodev sysfs /sys
 mount -t devtmpfs -o exec,nosuid,mode=0755,size=2M devtmpfs /dev 2>/dev/null \
         || mount -t tmpfs -o exec,nosuid,mode=0755,size=2M tmpfs /dev
 mount -t proc -o noexec,nosuid,nodev proc /proc
-[ -c /dev/ptmx ] || mknod -m 666 /dev/ptmx c 5 2
 [ -d /dev/pts ] || mkdir -m 755 /dev/pts
 mount -t devpts -o gid=5,mode=0620,noexec,nosuid devpts /dev/pts
 

@@ -1,0 +1,7 @@
+#!/bin/sh
+
+SOCKET=/run/podman/podman.sock
+if [ -e "$SOCKET" ]; then
+  chown root:wheel "$SOCKET"
+  chmod 660       "$SOCKET"
+fi
