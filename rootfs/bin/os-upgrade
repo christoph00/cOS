@@ -1,6 +1,96 @@
 #!/bin/sh
 
+set -eu
+
+
+# Color codes (optional)
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+# Function to print info messages
+info() {
+    printf "${GREEN}[INFO]${NC} %s\n" "$1"
+}
+
+# Function to print error messages
+error() {
+    printf "${RED}[ERROR]${NC} %s\n" "$1" >&2
+}
+
+# Function to print warning messages
+warn() {
+    printf "${YELLOW}[WARNING]${NC} %s\n" "$1"
+}
+
+
+info "Mounting ESP"
 mkdir /esp
 mount /dev/disk/by-label/ESP /esp
 
+OWNER="christoph00"
+REPO="cOS"
+API_URL="https://api.github.com/repos/${OWNER}/${REPO}/releases/latest"
+
+# Temporary file for JSON response
+TMP_JSON=$(mktemp)
+trap 'rm -f "$TMP_JSON"' EXIT
+
+info "Fetching latest release info for ${OWNER}/${REPO}..."
+
+# Query GitHub API
+if ! wget -qO "$TMP_JSON" "$API_URL"; then
+    error "Failed to fetch release info. Is the repository valid or private?"
+    exit 1
+fi
+
+# Ensure jq is installed
+if ! command -v jq >/dev/null 2>&1; then
+    error "jq not found. Please install jq to parse JSON."
+    exit 1
+fi
+
+# Extract release tag
+TAG=$(jq -r '.tag_name' "$TMP_JSON")
+if [ -z "$TAG" ] || [ "$TAG" = "null" ]; then
+    error "No release found."
+    exit 1
+fi
+
+info "Latest release: $TAG"
+
+# Files to download
+FILES="os.efi rootfs.tar.gz"
+
+for F in $FILES; do
+    info "Looking for $F..."
+    
+    # Get download URL for the file
+    URL=$(jq -r --arg name "$F" '.assets[] | select(.name == $name) | .browser_download_url' "$TMP_JSON")
+    
+    if [ -z "$URL" ] || [ "$URL" = "null" ]; then
+        warn "File $F not found in release $TAG."
+        continue
+    fi
+
+    info "Backup old $F..."
+    mv /esp/$F /esp/backup_$F
+    
+    info "Downloading $F..."
+    if wget -O "/esp/$F" "$URL"; then
+        info "✔ $F downloaded successfully"
+        SIZE=$(ls -lh "$F" | awk '{print $5}')
+        info "  Size: $SIZE"
+    else
+        error "✖ Download failed for $F"
+        exit 1
+    fi
+done
+
+info "Unmount ESP"
+umount /esp
+rm -rf /esp
+
+info "Upgrade complete!"
 
