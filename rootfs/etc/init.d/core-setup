@@ -19,8 +19,11 @@ start_pre() {
 
     ebegin "Creating user 'core' and adding to wheel group"
     if ! getent passwd core >/dev/null; then
-        adduser -h /home/core -G wheel -s /bin/ash core \
+        adduser -h /home/core -G wheel -s /bin/ash -D core \
           || { eend 1 "Failed to create user 'core'"; return 1; }
+	PASSWD=$(head -c 32 /dev/urandom | base64 | head -c 16)
+    	echo "core:$PASSWD" | chpasswd \
+          || { eend 1 "Failed to set password for user 'core'"; return 1; }
     fi
     eend 0
 
