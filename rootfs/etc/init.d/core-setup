@@ -19,7 +19,7 @@ start_pre() {
 
     ebegin "Creating user 'core' and adding to wheel group"
     if ! getent passwd core >/dev/null; then
-        adduser -h /home/core -G wheel -s /bin/ash -D core \
+        adduser -h /home/core -G wheel -s /bin/ash core \
           || { eend 1 "Failed to create user 'core'"; return 1; }
     fi
     eend 0
@@ -30,6 +30,7 @@ start_pre() {
          https://github.com/christoph00.keys \
         || { eend 1 "Failed to download SSH keys"; return 1; }
     chmod 600 /etc/ssh/authorized_keys/core
+    chown core /etc/ssh/authorized_keys/core
     eend 0
 
     ebegin "Checking/creating SSH host keys in /var/ssh"
