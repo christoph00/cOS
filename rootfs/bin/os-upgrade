@@ -1,0 +1,6 @@
+#!/bin/sh
+
+mkdir /esp
+mount /dev/disk/by-label/ESP /esp
+
+
