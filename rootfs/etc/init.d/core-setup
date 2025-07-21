@@ -36,6 +36,11 @@ start_pre() {
     chown core /etc/ssh/authorized_keys/core
     eend 0
 
+    ebegin "Creating Dirs in /var"
+    mkdir -p /var/lib/monit/conf.d
+    mkdir -p /var/lib/containers
+    mkdir -p /var/lib/ssh
+
     ebegin "Checking/creating SSH host keys in /var/ssh"
     install -d -m 700 /var/ssh
     for t in rsa ed25519 ecdsa; do
