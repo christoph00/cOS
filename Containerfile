@@ -55,7 +55,7 @@ RUN set -ex; \
             echo "UKI for aarch64"; \
             efi-mkuki \
                 -k $(ls /lib/modules) \
-                -c 'quiet' \
+                -c 'rw' \
                 -o /build/os.efi \
                 -r /etc/os-release \
                 -S /usr/lib/systemd/boot/efi/linuxaa64.efi.stub \
@@ -66,7 +66,7 @@ RUN set -ex; \
             echo "UKI for x86_64"; \
             efi-mkuki \
                 -k $(ls /lib/modules) \
-                -c 'quiet' \
+                -c 'rw \
                 -o /build/os.efi \
                 -r /etc/os-release \
                 -S /usr/lib/systemd/boot/efi/linuxx64.efi.stub \
