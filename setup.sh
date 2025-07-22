@@ -38,7 +38,7 @@ rc_add core-setup default
 
 rc_add sshd default
 
-chmod 700 /etc/monitrc
+chmod 700 "$ROOTFS"/etc/monitrc
 
 # einfo "Set Root Password"
 # sed -i 's|root.*|root:$1$n3vjdweX$vyZqcZyUC5Q2uq4bxnfbQ0:18242:0:99999:7:::|g' "$ROOTFS"/etc/shadow
