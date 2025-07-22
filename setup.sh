@@ -35,9 +35,7 @@ rc_add savecache shutdown
 rc_add local default
 rc_add networking default
 rc_add core-setup default
-rc_add tailscale default
-rc_add podman default
-rc_add monit default
+
 rc_add sshd default
 
 chmod 700 /etc/monitrc
