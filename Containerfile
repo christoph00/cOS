@@ -57,7 +57,7 @@ RUN set -ex; \
     fi; \
     efi-mkuki \
         -k $(ls /lib/modules) \
-        -c 'rw' \
+        -c 'console=ttyS0 console=tty1 console=ttyACM0' \
         -o /build/os.efi \
         -r /etc/os-release \
         -S $STUB \
