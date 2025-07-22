@@ -1,7 +1,7 @@
 ::sysinit:/sbin/openrc sysinit
 ::sysinit:/sbin/openrc boot
 
-mo:2345:respawn:/usr/bin/monit -Ic /etc/monitrc
+::2345:respawn:/usr/bin/monit -Ic /etc/monitrc
 
 ::wait:/sbin/openrc default
 ::shutdown:/sbin/openrc shutdown
