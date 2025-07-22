@@ -60,30 +60,50 @@ fi
 
 info "Latest release: $TAG"
 
-# Files to download
-FILES="os.efi rootfs.tar.gz"
+# Detect architecture
+ARCH=$(uname -m)
+case "$ARCH" in
+    x86_64)
+        ARCH="amd64"
+        ;;
+    aarch64)
+        ARCH="arm64"
+        ;;
+    *)
+        error "Unsupported architecture: $ARCH"
+        exit 1
+        ;;
+esac
 
-for F in $FILES; do
-    info "Looking for $F..."
+info "Detected architecture: $ARCH"
+
+# Files to download
+FILES="os-${ARCH}.efi rootfs-${ARCH}.tar.gz"
+
+for F_PATTERN in $FILES; do
+    F_TARGET=$(echo "$F_PATTERN" | sed "s/-${ARCH}//")
+    info "Looking for $F_PATTERN..."
     
     # Get download URL for the file
-    URL=$(jq -r --arg name "$F" '.assets[] | select(.name == $name) | .browser_download_url' "$TMP_JSON")
+    URL=$(jq -r --arg name "$F_PATTERN" '.assets[] | select(.name == $name) | .browser_download_url' "$TMP_JSON")
     
     if [ -z "$URL" ] || [ "$URL" = "null" ]; then
-        warn "File $F not found in release $TAG."
+        warn "File $F_PATTERN not found in release $TAG."
         continue
     fi
 
-    info "Backup old $F..."
-    mv /esp/$F /esp/backup_$F
+    info "Backup old $F_TARGET..."
+    if [ -f "/esp/$F_TARGET" ]; then
+        mv "/esp/$F_TARGET" "/esp/backup_$F_TARGET"
+    fi
     
-    info "Downloading $F..."
-    if wget -O "/esp/$F" "$URL"; then
-        info "✔ $F downloaded successfully"
-        SIZE=$(ls -lh "/esp/$F" | awk '{print $5}')
+    info "Downloading $F_PATTERN to $F_TARGET..."
+    if wget -O "/esp/$F_TARGET" "$URL"; then
+        info "✔ $F_PATTERN downloaded successfully"
+        SIZE=$(ls -lh "/esp/$F_TARGET" | awk '{print $5}')
         info "  Size: $SIZE"
     else
-        error "✖ Download failed for $F"
+        error "✖ Download failed for $F_PATTERN"
         exit 1
     fi
 done
@@ -93,4 +113,3 @@ umount /esp
 rm -rf /esp
 
 info "Upgrade complete!"
-
