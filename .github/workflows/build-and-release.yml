@@ -7,15 +7,22 @@ on:
 
 jobs:
   build:
+    strategy:
+      matrix:
+        arch: [amd64, arm64]
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
         uses: actions/checkout@v3
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
       - name: Build the container
         uses: redhat-actions/buildah-build@v2
         with:
           image: cos-image
+          arch: ${{ matrix.arch }}
           containerfiles: |
             ./Containerfile
 
@@ -29,7 +36,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: os-artifacts
+          name: os-artifacts-${{ matrix.arch }}
           path: artifacts
 
   release:
@@ -38,11 +45,17 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Download artifacts
+      - name: Download artifacts (amd64)
         uses: actions/download-artifact@v4
         with:
-          name: os-artifacts
-          path: artifacts
+          name: os-artifacts-amd64
+          path: artifacts/amd64
+
+      - name: Download artifacts (arm64)
+        uses: actions/download-artifact@v4
+        with:
+          name: os-artifacts-arm64
+          path: artifacts/arm64
 
       - name: Create Release
         id: create_release
@@ -55,22 +68,42 @@ jobs:
           draft: false
           prerelease: false
 
-      - name: Upload Release Asset (os.efi)
+      - name: Upload Release Asset (os.efi for amd64)
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: artifacts/os.efi
-          asset_name: os.efi
+          asset_path: artifacts/amd64/os.efi
+          asset_name: os-amd64.efi
           asset_content_type: application/octet-stream
 
-      - name: Upload Release Asset (rootfs.tar.gz)
+      - name: Upload Release Asset (rootfs.tar.gz for amd64)
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: artifacts/rootfs.tar.gz
-          asset_name: rootfs.tar.gz
+          asset_path: artifacts/amd64/rootfs.tar.gz
+          asset_name: rootfs-amd64.tar.gz
+          asset_content_type: application/gzip
+
+      - name: Upload Release Asset (os.efi for arm64)
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: artifacts/arm64/os.efi
+          asset_name: os-arm64.efi
+          asset_content_type: application/octet-stream
+
+      - name: Upload Release Asset (rootfs.tar.gz for arm64)
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: artifacts/arm64/rootfs.tar.gz
+          asset_name: rootfs-arm64.tar.gz
           asset_content_type: application/gzip

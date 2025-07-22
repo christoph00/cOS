@@ -50,34 +50,19 @@ RUN mkinitfs -F "base ata usb zram ext4 vfat virtio" -i /build/init -o /build/in
 # ---------- STAGE 4: UKI ---------------------------------------------
 #######################################################################
 RUN set -ex; \
-    case "$TARGETARCH" in \
-        "arm64") \
-            echo "UKI for aarch64"; \
-            efi-mkuki \
-                -k $(ls /lib/modules) \
-                -c 'rw' \
-                -o /build/os.efi \
-                -r /etc/os-release \
-                -S /usr/lib/systemd/boot/efi/linuxaa64.efi.stub \
-                /boot/vmlinuz-lts \
-                /build/initfs; \
-            ;; \
-        "amd64") \
-            echo "UKI for x86_64"; \
-            efi-mkuki \
-                -k $(ls /lib/modules) \
-                -c 'rw \
-                -o /build/os.efi \
-                -r /etc/os-release \
-                -S /usr/lib/systemd/boot/efi/linuxx64.efi.stub \
-                /boot/vmlinuz-lts \
-                /build/initfs; \
-            ;; \
-        *) \
-            echo "Unknown architecture: $TARGETARCH"; \
-            exit 1; \
-            ;; \
-    esac
+    if [ "$TARGETARCH" = "arm64" ]; then \
+        STUB="/usr/lib/systemd/boot/efi/linuxaa64.efi.stub"; \
+    else \
+        STUB="/usr/lib/systemd/boot/efi/linuxx64.efi.stub"; \
+    fi; \
+    efi-mkuki \
+        -k $(ls /lib/modules) \
+        -c 'rw' \
+        -o /build/os.efi \
+        -r /etc/os-release \
+        -S $STUB \
+        /boot/vmlinuz-lts \
+        /build/initfs
 
 FROM busybox 
 COPY --from=builder /build/rootfs.tar.gz /
