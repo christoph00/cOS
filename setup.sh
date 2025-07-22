@@ -24,7 +24,6 @@ rc_add hwclock boot
 rc_add modules boot
 rc_add sysctl boot
 rc_add bootmisc boot
-rc_add syslog boot
 rc_add cgroups boot
 rc_add tty boot
 

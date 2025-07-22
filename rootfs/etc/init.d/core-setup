@@ -41,6 +41,8 @@ start_pre() {
     mkdir -p /var/lib/containers
     mkdir -p /var/lib/ssh
 
+    ln -sf /home/root /root
+
     ebegin "Checking/creating SSH host keys in /var/ssh"
     install -d -m 700 /var/ssh
     for t in rsa ed25519 ecdsa; do
