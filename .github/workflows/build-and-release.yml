@@ -23,6 +23,8 @@ jobs:
         with:
           image: cos-image
           arch: ${{ matrix.arch }}
+          build-args: |
+            TARGETARCH=${{ matrix.arch }}
           containerfiles: |
             ./Containerfile
 
