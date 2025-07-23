@@ -52,10 +52,10 @@ RUN mkinitfs -F "base ata usb zram ext4 vfat virtio nvme scsi" -i /build/init -o
 RUN set -ex; \
     if [ "$TARGETARCH" = "arm64" ]; then \
         STUB="/usr/lib/systemd/boot/efi/linuxaa64.efi.stub"; \
-	KARGS="console=ttyACM0"; \
+	KARGS="quiet console=ttyACM0"; \
     else \
         STUB="/usr/lib/systemd/boot/efi/linuxx64.efi.stub"; \
-	KARGS="quiet"; \
+	KARGS="quiet console=ttyS0"; \
     fi; \
     efi-mkuki \
         -k $(ls /lib/modules) \
