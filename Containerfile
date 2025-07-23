@@ -59,7 +59,7 @@ RUN set -ex; \
     fi; \
     efi-mkuki \
         -k $(ls /lib/modules) \
-        -c $KARGS \
+        -c "$KARGS" \
         -o /build/os.efi \
         -r /etc/os-release \
         -S $STUB \
