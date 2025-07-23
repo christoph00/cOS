@@ -11,9 +11,19 @@ log_err(){ printf "✗ %s\n" "$*" | tee -a "$LOGFILE" >&2; }
 touch "$LOGFILE" 2>/dev/null || LOGFILE="/dev/null"
 
 # Ensure PATH includes essential binaries
-/bin/busybox --install -s /bin
-export PATH=/bin:/sbin:/usr/bin:/usr/sbin
-ln -s /bin/busybox /usr/bin/readlink
+
+/bin/busybox mkdir -p \
+	/bin \
+	/sbin \
+	/usr/bin \
+	/usr/sbin \
+	/proc \
+	/sys \
+	/dev \
+	/tmp \
+	/etc
+/bin/busybox --install -s
+export PATH="$PATH:/usr/bin:/bin:/usr/sbin:/sbin"
 
 log "Start init"
 
