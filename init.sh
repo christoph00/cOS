@@ -23,7 +23,7 @@ touch "$LOGFILE" 2>/dev/null || LOGFILE="/dev/null"
 	/tmp \
 	/etc
 /bin/busybox --install -s
-export PATH="$PATH:/usr/bin:/bin:/usr/sbin:/sbin"
+export PATH=/bin:/sbin:/usr/bin:/usr/sbin
 
 log "Start init"
 
@@ -85,8 +85,15 @@ while [ ! -e /dev/zram0 ]; do
     fi
 done
 
-/bin/mdev -s
-sleep 0.5
+log "Running mdev"
+echo /sbin/mdev >/proc/sys/kernel/hotplug 
+/sbin/mdev -s
+i=0
+    while [ $i -lt 5 ]; do
+        sleep 1
+        echo -n "."
+        i=$(($i+1))
+    done
 
 mem_total_kb=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
 zram_size_kb=$((mem_total_kb * 8 / 10))
