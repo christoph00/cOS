@@ -43,10 +43,10 @@ start_pre() {
 
     ln -sf /home/root /root
 
-    ebegin "Checking/creating SSH host keys in /var/ssh"
+    ebegin "Checking/creating SSH host keys in /var/lib/ssh"
     install -d -m 700 /var/ssh
     for t in rsa ed25519 ecdsa; do
-        key="/var/ssh/ssh_host_${t}_key"
+        key="/var/lib/ssh/ssh_host_${t}_key"
         pub="${key}.pub"
         if [ ! -f "$key" ]; then
             ssh-keygen -t "$t" -f "$key" -N "" \
