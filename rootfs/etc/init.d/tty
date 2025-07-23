@@ -1,25 +1,32 @@
 #!/sbin/openrc-run
-
 start ()
 {
-ebegin "Init tty.."
+  ebegin "Init tty.."
 
-if ! [ /dev/tty1 -ef /dev/console ]; then
-    lxc_console="console"
-fi
+  if ! [ /dev/tty1 -ef /dev/console ]; then
+      lxc_console="console"
+  fi
 
-s_args=""
-for tty in $lxc_console tty1 ttyS0 ttyACM0 ttyAMA0 hvc0; do
-    if [ -e /dev/$tty ] && { echo "" >> "/dev/$tty" ; } 2>/dev/null ; then
-        s_args="${s_args:+${s_args} }s/^#$tty:\(.*\)/$tty:\1/;"
-    else
-        s_args="${s_args:+${s_args} }s/^$tty:\(.*\)/#$tty:\1/;"
+  ttys="$lxc_console tty1 ttyS0 ttyACM0 ttyAMA0 hvc0"
+  inittab_file="/etc/inittab"
+
+  for tty in $ttys; do
+    if [ -e /dev/$tty ]; then
+      if ! grep -q "^$tty:" "$inittab_file"; then
+        case "$tty" in
+          console)
+            echo "console::respawn:/sbin/getty 38400 $tty" >> "$inittab_file"
+            ;;
+          *)
+            echo "$tty::respawn:/sbin/getty 38400 $tty" >> "$inittab_file"
+            ;;
+        esac
+      fi
     fi
-done
-[ -z "$s_args" ] ||
-    { sed -i "$s_args" /etc/inittab && kill -HUP 1; }
+  done
 
+  kill -HUP 1
 
-eend 0
-	
+  eend 0
 }
+
