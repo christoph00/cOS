@@ -53,6 +53,7 @@ for mod in virtio_pci virtio_blk virtio_scsi virtio_ring virtio_rng virtio_conso
            simpledrm \
            ata_piix ata_generic libata \
            sd_mod sr_mod uhci_hcd ehci_hcd usb_storage \
+	   scsi \
            floppy; do
     if modprobe "$mod" 2>>"$LOGFILE"; then
         log_suc "modprobe $mod"

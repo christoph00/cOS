@@ -44,7 +44,7 @@ RUN chmod +x /build/init \
     && echo 'kernel/fs/vfat' > /etc/mkinitfs/features.d/vfat.modules \
     && echo '/sbin/mkfs.ext4' > /etc/mkinitfs/features.d/ext4.files 
 
-RUN mkinitfs -F "base ata usb zram ext4 vfat virtio nvme" -i /build/init -o /build/initfs $(ls /lib/modules)
+RUN mkinitfs -F "base ata usb zram ext4 vfat virtio nvme scsi" -i /build/init -o /build/initfs $(ls /lib/modules)
 
 #######################################################################
 # ---------- STAGE 4: UKI ---------------------------------------------
