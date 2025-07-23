@@ -34,6 +34,26 @@ retry() {
     done
 }
 
+hotplug_scan()
+{
+    echo /sbin/mdev > /proc/sys/kernel/hotplug
+    mdev -s
+    sleep 2
+}
+
+load_kernel_modules() {
+MODULES="virtio_pci virtio_blk virtio-scsi virtio_ring virtio_rng virtio_console zram ext4 vfat ata_piix ata_generic libata sd_mod sr_mod uhci_hcd ehci_hcd usb_storage floppy nvme"
+
+for mod in $MODULES; do
+    if modprobe "$mod"; then
+        log_suc "modprobe $mod succeeded"
+    else
+        log_err "modprobe $mod failed (warning only)"
+    fi
+done
+
+}
+
 log "Starting initrd script"
 
 # Mount filesystems with retry
@@ -60,15 +80,8 @@ try_mount devpts "gid=5,mode=0620,noexec,nosuid" devpts /dev/pts || log_err "Fai
 
 # Load kernel modules (non-fatal errors logged)
 log "Loading kernel modules"
-MODULES="virtio_pci virtio_blk virtio-scsi virtio_ring virtio_rng virtio_console zram ext4 vfat ata_piix ata_generic libata sd_mod sr_mod uhci_hcd ehci_hcd usb_storage floppy"
+load_kernel_modules
 
-for mod in $MODULES; do
-    if modprobe "$mod"; then
-        log_suc "modprobe $mod succeeded"
-    else
-        log_err "modprobe $mod failed (warning only)"
-    fi
-done
 
 # Wait for the zram device node with timeout
 log "Waiting for /dev/zram0 (timeout 30s)"
@@ -85,9 +98,8 @@ while [ ! -b /dev/zram0 ]; do
 done
 log_suc "/dev/zram0 is present"
 
-# Trigger mdev to create device nodes
-/bin/mdev -s
-sleep 0.5
+
+hotplug_scan
 
 # Determine ZRAM size (80% of total memory)
 mem_kb=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
