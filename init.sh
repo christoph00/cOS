@@ -48,7 +48,7 @@ try_mount devpts    "gid=5,mode=0620,noexec,nosuid" devpts /dev/pts
 : ${ROOT_ARCHIVE:=rootfs.tar.gz}
 
 log "Loading kernel modules ..."
-for mod in virtio_pci virtio_blk virtio-scsi virtio_ring virtio_rng virtio_console \
+for mod in virtio_pci virtio_blk virtio_scsi virtio_ring virtio_rng virtio_console \
            zram ext4 vfat \
            simpledrm \
            ata_piix ata_generic libata \
