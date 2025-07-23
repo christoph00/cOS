@@ -52,12 +52,14 @@ RUN mkinitfs -F "base ata usb zram ext4 vfat virtio nvme" -i /build/init -o /bui
 RUN set -ex; \
     if [ "$TARGETARCH" = "arm64" ]; then \
         STUB="/usr/lib/systemd/boot/efi/linuxaa64.efi.stub"; \
+	KARGS="console=ttyACM0"; \
     else \
         STUB="/usr/lib/systemd/boot/efi/linuxx64.efi.stub"; \
+	KARGS="quiet"; \
     fi; \
     efi-mkuki \
         -k $(ls /lib/modules) \
-        -c 'console=ttyS0 console=tty1 console=ttyACM0' \
+        -c $KARGS \
         -o /build/os.efi \
         -r /etc/os-release \
         -S $STUB \
