@@ -13,6 +13,7 @@ touch "$LOGFILE" 2>/dev/null || LOGFILE="/dev/null"
 # Ensure PATH includes essential binaries
 /bin/busybox --install -s /bin
 export PATH=/bin:/sbin:/usr/bin:/usr/sbin
+ln -s /bin/busybox /usr/bin/readlink
 
 log "Start init"
 
