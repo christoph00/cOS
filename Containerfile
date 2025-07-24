@@ -50,6 +50,9 @@ RUN mkinitfs -F "base ata usb zram ext4 vfat virtio nvme scsi" -i /build/init -o
 # ---------- STAGE 4: UKI ---------------------------------------------
 #######################################################################
 RUN set -ex; \
+    [ "$microcode" ] || for path in /boot/intel-ucode.img /boot/amd-ucode.img; do
+	[ -f "$path" ] && microcode="$path"
+    done
     if [ "$TARGETARCH" = "arm64" ]; then \
         STUB="/usr/lib/systemd/boot/efi/linuxaa64.efi.stub"; \
 	KARGS="quiet console=ttyACM0"; \
@@ -64,6 +67,7 @@ RUN set -ex; \
         -r /etc/os-release \
         -S $STUB \
         /boot/vmlinuz-lts \
+	 $microcode
         /build/initfs
 
 FROM busybox 

@@ -1,0 +1,48 @@
+contents:
+  keyring:
+    - https://packages.wolfi.dev/os/wolfi-signing.rsa.pub
+  repositories:
+    # - https://dl-cdn.alpinelinux.org/alpine/edge/main
+    # - https://packages.cgr.dev/os
+    - https://packages.wolfi.dev/os
+    # - https://dl-cdn.alpinelinux.org/alpine/edge/community
+  packages:
+    - wolfi-base
+    - neovim
+    - gcc
+    - fzf
+    - nodejs
+    - npm
+    - yazi
+    - openssh
+    - uv
+    - tmux
+    - fish
+    - bash
+    - zsh
+    - dropbear
+    - rclone
+    - rsync
+
+entrypoint:
+  type: service-bundle
+  services:
+    # nvim: /usr/bin/nvim --headless --listen 0.0.0.0:8383
+    sshd: /usr/bin/dropbear -F -w -s -p 2022
+
+stop-signal: SIGQUIT
+
+accounts:
+  groups:
+    - groupname: christoph
+      gid: 1000
+  users:
+    - username: christoph
+      uid: 1000
+      shell: /bin/sh
+archs:
+  - x86_64
+  - aarch64
+
+environment:
+  PATH: /usr/local/sbin:/usr/local/bin:/usr/bin:/usr/sbin:/sbin:/bin
