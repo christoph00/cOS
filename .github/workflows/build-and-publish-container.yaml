@@ -11,5 +11,5 @@ jobs:
         uses: chainguard-images/actions/apko-publish@main
         with:
           config: container/devbox/devbox.yaml
-          tag: ghcr.io/${{ github.actor }}/container-devbox:${{ github.sha }}
+          tag: ghcr.io/${{ github.actor }}/container-devbox:latest
 
