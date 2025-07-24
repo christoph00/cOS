@@ -26,7 +26,7 @@ COPY setup.sh /build/setup.sh
 #######################################################################
 RUN alpine-make-rootfs \
       --branch v3.22 \
-      --packages "alpine-base linux-lts linux-firmware-none openrc podman monit doas tailscale btrfs-progs openssh-server jq nftables iptables rng-tools htop logrotate irqbalance cronie chrony haveged" \
+      --packages "alpine-base linux-lts linux-firmware-none openrc podman monit doas tailscale btrfs-progs openssh-server jq nftables iptables rng-tools htop logrotate irqbalance cronie chrony haveged python3" \
       -s rootfs-overlay \
       rootfs /build/setup.sh
 RUN rm -rf rootfs/boot && rm -rf rootfs/var
