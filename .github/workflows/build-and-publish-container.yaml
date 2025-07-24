@@ -1,0 +1,15 @@
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: APKO Build
+        uses: chainguard-images/actions/apko-publish@main
+        with:
+          config: container/devbox/devbox.yaml
+          tag: ghcr.io/${{ github.actor }}/container-devbox:${{ github.sha }}
+
