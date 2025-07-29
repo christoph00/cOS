@@ -14,6 +14,7 @@ RUN apk add --no-cache \
       alpine-make-rootfs \
       systemd-efistub \
       e2fsprogs \
+      upx \
       squashfs-tools
 
 WORKDIR /build
@@ -26,10 +27,11 @@ COPY setup.sh /build/setup.sh
 #######################################################################
 RUN alpine-make-rootfs \
       --branch v3.22 \
-      --packages "alpine-base linux-lts linux-firmware-none openrc monit doas btrfs-progs openssh-server jq nftables iptables rng-tools logrotate irqbalance cronie chrony haveged python3" \
+      --packages "alpine-base linux-lts linux-firmware-none openrc monit doas btrfs-progs openssh-server jq nftables iptables rng-tools logrotate irqbalance cronie chrony haveged podman" \
       -s rootfs-overlay \
       rootfs /build/setup.sh
 RUN rm -rf rootfs/boot && rm -rf rootfs/var
+RUN find rootfs/bin rootfs/sbin rootfs/usr/bin rootfs/usr/sbin -type f -executable -exec upx -q --best --ultra-brute --no-backup {} \; 
 RUN tar -C rootfs -czf rootfs.tar.gz .
 
 #######################################################################
@@ -46,13 +48,16 @@ RUN chmod +x /build/init \
 
 RUN mkinitfs -F "base ata usb zram ext4 vfat virtio nvme scsi" -i /build/init -o /build/initfs $(ls /lib/modules)
 
+RUN cd rootfs && find . | cpio --quiet -H newc -o | gzip -9 -n > /build/initfs-full
+
+
 #######################################################################
 # ---------- STAGE 4: UKI ---------------------------------------------
 #######################################################################
 RUN set -ex; \
-    [ "$microcode" ] || for path in /boot/intel-ucode.img /boot/amd-ucode.img; do
-	[ -f "$path" ] && microcode="$path"
-    done
+    # if [ "$microcode" ] || for path in /boot/intel-ucode.img /boot/amd-ucode.img; do \
+	# [ -f "$path" ] && microcode="$path"; \
+    # done; \
     if [ "$TARGETARCH" = "arm64" ]; then \
         STUB="/usr/lib/systemd/boot/efi/linuxaa64.efi.stub"; \
 	KARGS="quiet console=ttyACM0"; \
@@ -62,19 +67,19 @@ RUN set -ex; \
     fi; \
     efi-mkuki \
         -k $(ls /lib/modules) \
-        -c "$KARGS" \
+        -c "$KARGS rdinit=/sbin/init" \
         -o /build/os.efi \
         -r /etc/os-release \
         -S $STUB \
         /boot/vmlinuz-lts \
-	 $microcode
-        /build/initfs
+	 $microcode \
+        /build/initfs-full
 
-FROM busybox 
-COPY --from=builder /build/rootfs.tar.gz /
-COPY --from=builder /build/os.efi /
+# FROM busybox 
+# COPY --from=builder /build/rootfs.tar.gz /
+# COPY --from=builder /build/os.efi /
 
-CMD ["/bin/true"]
+# CMD ["/bin/true"]
 
 #######################################################################
 # ---------- STAGE 5: Test ------------------------------------------
