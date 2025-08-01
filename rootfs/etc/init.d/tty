@@ -3,11 +3,11 @@ start ()
 {
   ebegin "Init tty.."
 
-  if ! [ /dev/tty1 -ef /dev/console ]; then
-      lxc_console="console"
-  fi
+  # if ! [ /dev/tty1 -ef /dev/console ]; then
+      # lxc_console="console"
+  # fi
 
-  ttys="$lxc_console tty1 ttyS0 ttyACM0 ttyAMA0 hvc0"
+  ttys="tty1 ttyS0 ttyACM0 ttyAMA0 hvc0"
   inittab_file="/etc/inittab"
 
   for tty in $ttys; do

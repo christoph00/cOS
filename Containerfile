@@ -27,11 +27,12 @@ COPY setup.sh /build/setup.sh
 #######################################################################
 RUN alpine-make-rootfs \
       --branch v3.22 \
-      --packages "alpine-base linux-lts linux-firmware-none openrc monit doas btrfs-progs openssh-server jq nftables iptables rng-tools logrotate irqbalance cronie chrony haveged podman" \
+      --packages "alpine-base linux-lts linux-firmware-none openrc monit doas btrfs-progs openssh-server jq nftables iptables rng-tools logrotate irqbalance cronie chrony e2fsprogs sgdisk" \
       -s rootfs-overlay \
       rootfs /build/setup.sh
 RUN rm -rf rootfs/boot && rm -rf rootfs/var
-RUN find rootfs/bin rootfs/sbin rootfs/usr/bin rootfs/usr/sbin -type f -executable -exec upx -q --best --ultra-brute --no-backup {} \; 
+# RUN find rootfs/bin rootfs/sbin rootfs/usr/bin rootfs/usr/sbin -type f -executable -exec strip {} \; 
+RUN find rootfs/bin rootfs/sbin rootfs/usr/bin rootfs/usr/sbin -type f -executable -exec upx -7 {} \; 
 RUN tar -C rootfs -czf rootfs.tar.gz .
 
 #######################################################################
@@ -46,7 +47,7 @@ RUN chmod +x /build/init \
     && echo 'kernel/fs/vfat' > /etc/mkinitfs/features.d/vfat.modules \
     && echo '/sbin/mkfs.ext4' > /etc/mkinitfs/features.d/ext4.files 
 
-RUN mkinitfs -F "base ata usb zram ext4 vfat virtio nvme scsi" -i /build/init -o /build/initfs $(ls /lib/modules)
+# RUN mkinitfs -F "base ata usb zram ext4 vfat virtio nvme scsi" -i /build/init -o /build/initfs $(ls /lib/modules)
 
 RUN cd rootfs && find . | cpio --quiet -H newc -o | gzip -9 -n > /build/initfs-full
 
@@ -63,11 +64,11 @@ RUN set -ex; \
 	KARGS="quiet console=ttyACM0"; \
     else \
         STUB="/usr/lib/systemd/boot/efi/linuxx64.efi.stub"; \
-	KARGS="quiet console=ttyS0"; \
+	KARGS="console=ttyS0"; \
     fi; \
     efi-mkuki \
         -k $(ls /lib/modules) \
-        -c "$KARGS rdinit=/sbin/init" \
+        -c "$KARGS rdinit=/init" \
         -o /build/os.efi \
         -r /etc/os-release \
         -S $STUB \
@@ -84,17 +85,17 @@ RUN set -ex; \
 #######################################################################
 # ---------- STAGE 5: Test ------------------------------------------
 #######################################################################
-# FROM docker.io/library/alpine:3.22 as vm
-# RUN apk add --no-cache ovmf neovim qemu-img qemu-system-x86_64 e2fsprogs
-# COPY --from=builder /build/os.efi /work/
+FROM docker.io/library/alpine:3.22 as vm
+RUN apk add --no-cache ovmf neovim qemu-img qemu-system-x86_64 e2fsprogs
+COPY --from=builder /build/os.efi /work/
 # COPY --from=builder /build/rootfs.tar.gz /work/
-# COPY entrypoint.sh /entrypoint.sh
-#
+COPY entrypoint.sh /entrypoint.sh
+
 # RUN mkfs.ext4 -L ESP -d /work /osdisk.raw 2G \
-#     && qemu-img convert -f raw -O qcow2 -o cluster_size=2M,lazy_refcounts=on /osdisk.raw /osdisk.qcow2 && rm /osdisk.raw
-#
-# VOLUME /disk
-#
-# ENTRYPOINT ["/entrypoint.sh"]
-#
-# CMD ["vm"]
+    # && qemu-img convert -f raw -O qcow2 -o cluster_size=2M,lazy_refcounts=on /osdisk.raw /osdisk.qcow2 && rm /osdisk.raw
+
+VOLUME /disk
+
+ENTRYPOINT ["/entrypoint.sh"]
+
+CMD ["vm"]

@@ -91,9 +91,9 @@ set statefile /var/lib/monit/state
 ## by using the SLOTS option (if omitted, the queue is limited by space
 ## available in the back end filesystem).
 #
- set eventqueue
-     basedir /var/lib/monit/events  # set the base directory where events will be stored
-     slots 100                      # optionally limit the queue size
+set eventqueue
+ basedir /var/lib/monit/events  # set the base directory where events will be stored
+ slots 100                      # optionally limit the queue size
 #
 #
 ## Send status and events to M/Monit (for more information about M/Monit
@@ -313,6 +313,6 @@ set httpd unixsocket /run/monit.sock
 ## directories.
 #
 include /etc/monit.d/*
-include /var/lib/monit/conf.d/*
+# include /var/lib/monit/conf.d/*
 #
 

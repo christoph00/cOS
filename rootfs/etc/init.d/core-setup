@@ -4,18 +4,14 @@ depend() {
     need localmount
     need networking
     before sshd
-    before tailscale
-    before monit
 }
 
 start_pre() {
-    ebegin "Verifying Btrfs mounts (/var, /home)"
-    for dir in /var /home; do
-        mountpoint -q "$dir" || { eend 1 "Mount point missing: $dir"; return 1; }
-        grep -qE " ${dir} .*btrfs " /proc/mounts \
-            || { eend 1 "Not a Btrfs filesystem: $dir"; return 1; }
-    done
+    ebegin "Creating Dirs in /var"
+    mkdir -p /var/lib/monit/state
+    mkdir -p /var/lib/containers
     eend 0
+
 
     ebegin "Creating user 'core' and adding to wheel group"
     if ! getent passwd core >/dev/null; then
@@ -36,15 +32,8 @@ start_pre() {
     chown core /etc/ssh/authorized_keys/core
     eend 0
 
-    ebegin "Creating Dirs in /var"
-    mkdir -p /var/lib/monit/conf.d
-    mkdir -p /var/lib/containers
-    mkdir -p /var/lib/ssh
-
-    ln -sf /home/root /root
-
     ebegin "Checking/creating SSH host keys in /var/lib/ssh"
-    install -d -m 700 /var/ssh
+    install -d -m 700 /var/lib/ssh
     for t in rsa ed25519 ecdsa; do
         key="/var/lib/ssh/ssh_host_${t}_key"
         pub="${key}.pub"
@@ -58,15 +47,16 @@ start_pre() {
 }
 
 start() {
-    ebegin "Reading and setting hostname from /var/config.json"
-    HOSTNAME=$(jq -r '.hostname' /var/config.json 2>/dev/null) \
-        || { eend 1 "Error reading hostname"; return 1; }
-    if [ -n "$HOSTNAME" ]; then
-        echo "$HOSTNAME" > /etc/hostname
-        hostname "$HOSTNAME"
-    fi
+    # ebegin "Reading and setting hostname from /var/config.json"
+    # HOSTNAME=$(jq -r '.hostname' /var/config.json 2>/dev/null) \
+    #     || { eend 1 "Error reading hostname"; return 1; }
+    # if [ -n "$HOSTNAME" ]; then
+    #     echo "$HOSTNAME" > /etc/hostname
+    #     hostname "$HOSTNAME"
+    # fi
+    # eend 0
+
+    ebegin "Install Packages"
+    apk add podman htop
     eend 0
-
 }
-
-

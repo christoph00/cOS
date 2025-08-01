@@ -39,5 +39,6 @@ rc_add sshd default
 
 chmod 700 "$ROOTFS"/etc/monitrc
 
-# einfo "Set Root Password"
+einfo "Set Root Password"
 # sed -i 's|root.*|root:$1$n3vjdweX$vyZqcZyUC5Q2uq4bxnfbQ0:18242:0:99999:7:::|g' "$ROOTFS"/etc/shadow
+sed -i 's|^root:[^:]*:|root:$6$UIgiYBYh6IhLhm5D$Q2ZN2Pruh3ZJdJmjKiLdZQ5ziPT/1SFSmAhAuK4yttgUxG6cpdDUagWL8Egl.uKUz1JiyjeeqDjxwfT1x9T3b.:|' "$ROOTFS"/etc/shadow

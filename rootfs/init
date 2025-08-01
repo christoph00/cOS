@@ -1,5 +1,5 @@
 #!/bin/sh
-set -e
+set -ex
 
 LOGFILE="/initrd.log"
 
@@ -88,12 +88,6 @@ done
 log "Running mdev"
 echo /sbin/mdev >/proc/sys/kernel/hotplug 
 /sbin/mdev -s
-i=0
-    while [ $i -lt 5 ]; do
-        sleep 1
-        echo -n "."
-        i=$(($i+1))
-    done
 
 mem_total_kb=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
 zram_size_kb=$((mem_total_kb * 8 / 10))
@@ -112,23 +106,64 @@ if ! try_mount "$ROOT_FSTYPE" "defaults" /dev/zram0 /mnt/zram_root; then
 fi
 log_suc "Root zram formatted and mounted"
 
-log "Mounting Alpine-dev: $ROOT_DEV"
-if ! try_mount auto "defaults" "$ROOT_DEV" /mnt/alpine_dev; then
-    log_err "Mounting alpine_dev failed"
-    exec sh
+for dir in bin etc usr lib sbin; do
+  [ -d "/$dir" ] && cp -a "/$dir" /mnt/zram_root/
+done
+
+for dev in /dev/sda /dev/vda; do
+  [ -b "$dev" ] && DISK="$dev" && break
+done
+
+[ -z "${DISK:-}" ] && log_err "No Valid Disk found." && exec sh
+
+if [ ! -b "/dev/disk/by-label/data" ]; then
+  log "No Disk with Label data found. Formatting $DISK ..."
+
+  sgdisk -Zo "$DISK"
+
+  sgdisk -n 1:1M:+512M -t 1:ef00 "$DISK"
+  sgdisk -n 2:0:+2G -t 2:8200 "$DISK"
+  sgdisk -n 3:0:0 -t 3:8300 "$DISK"
+
+  partprobe "$DISK"
+  sleep 2
+
+  EFI="${DISK}1"
+  SWAP="${DISK}2"
+  BTRFS="${DISK}3"
+
+  mkfs.vfat -n ESP -F32 "$EFI"
+  mkswap "$SWAP"
+  swapon "$SWAP"
+  mkfs.btrfs -f -L data "$BTRFS"
+
+  mkdir -p /mnt/data
+  mdev -s
+  mount -t btrfs "$BTRFS" /mnt/data
+  sleep 0.1
+  btrfs subvolume create /mnt/data/@etc
+  btrfs subvolume create /mnt/data/@var
+  btrfs subvolume create /mnt/data/@home
+
+  ls -lah /mnt/data
+
+  umount /mnt/data
 fi
 
-if [ ! -f "/mnt/alpine_dev/${ROOT_ARCHIVE}" ]; then
-    log_err "rootfs archive not found!"
-    exec sh
+
+mkdir -p /mnt/zram_root/var
+mount -t btrfs -o subvol=@var -o compress-force=zstd /dev/disk/by-label/data /mnt/zram_root/var
+mkdir -p /mnt/zram_root/home
+mount -t btrfs -o subvol=@home -o compress-force=zstd /dev/disk/by-label/data /mnt/zram_root/home
+mkdir -p /mnt/etc-persist
+mount -t btrfs -o subvol=@etc -o compress-force=zstd /dev/disk/by-label/data /mnt/etc-persist
+
+if [ -d /mnt/etc-persist/.git ]; then
+  git --git-dir=/mnt/etc-persist/.git --work-tree=/mnt/zram_root/etc checkout -f
 fi
 
-log "Extracting rootfs archive to zram root"
-if ! tar xzf "/mnt/alpine_dev/${ROOT_ARCHIVE}" -C /mnt/zram_root >>"$LOGFILE" 2>&1; then
-    log_err "rootfs archive extraction failed!"
-    exec sh
-fi
-log_suc "rootfs archive extraction successful"
+umount /mnt/etc-persist
+
 
 log "Switching root"
 if [ ! -x "/mnt/zram_root/sbin/init" ]; then
@@ -136,11 +171,12 @@ if [ ! -x "/mnt/zram_root/sbin/init" ]; then
     exec sh
 fi
 
-umount /sys /proc
+mkdir -p /mnt/zram_root/dev /mnt/zram_root/proc /mnt/zram_root/sys /mnt/zram_root/run
 
-mkdir -p /mnt/zram_root/dev
+mount --move /dev  /mnt/zram_root/dev
+mount --move /proc /mnt/zram_root/proc
+mount --move /sys  /mnt/zram_root/sys
 
-mount --move /dev /mnt/zram_root/dev
 exec < /mnt/zram_root/dev/console > /mnt/zram_root/dev/console 2>&1
 exec switch_root -c /dev/console /mnt/zram_root /sbin/init
 

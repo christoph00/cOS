@@ -16,14 +16,16 @@ show_help() {
 start_vm() {
     echo "Starting QEMU virtual machine..."
     exec qemu-system-x86_64 \
-        -m 1G \
+        -m 2G \
+	-cpu qemu64 \
+	-smp 4 \
         -nographic \
         -drive if=pflash,format=raw,readonly=yes,file=/usr/share/OVMF/OVMF_CODE.fd \
         -drive if=pflash,format=raw,file=/usr/share/OVMF/OVMF_VARS.fd \
         -kernel /work/os.efi \
         -device virtio-net,netdev=nic \
         -netdev user,hostname=os,id=nic \
-	-drive file=/osdisk.qcow2,format=qcow2,if=none,id=disk0 \
+	-drive file=/disk/osdisk.qcow2,format=qcow2,if=none,id=disk0 \
         -device virtio-blk-pci,drive=disk0
 }
 
